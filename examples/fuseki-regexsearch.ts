@@ -100,10 +100,24 @@ function onWorkspaceMounted(workspace: Workspace) {
   loadDiagram(workspace, dataProvider);
 }
 
+import { Element } from '../src/graph-explorer/diagram/elements';
+
 const props: WorkspaceProps & ClassAttributes<Workspace> = {
   ref: onWorkspaceMounted,
   viewOptions: {
-    onIriClick: ({ iri }) => window.open(iri),
+    onIriClick: ({ iri, element, clickIntent }) => {
+      let ldv_url_func = (iri: string): string => {
+	let ldv_url = "@LDV_URL@";
+	ldv_url += "*?"
+	return `${ldv_url}${iri}`
+      }
+      let ldv_url: string = ldv_url_func(iri);
+      if (!ldv_url.startsWith("*?") && clickIntent == 'openEntityIri') {
+        window.open(ldv_url)
+      } else {
+        window.open(iri)
+      }
+    },
   },
 };
 

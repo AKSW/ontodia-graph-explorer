@@ -9,7 +9,8 @@ make_instance() {
     local endpoint="$2"
     local lucene="$3"
     local creds="$4"
-    local g="$5"
+    local ldv="$5"
+    local g="$6"
     local i
     local fetch_credentials
     local title_prefix
@@ -85,6 +86,7 @@ Redirect to   : $endpoint
 	FETCH_CREDENTIALS="$fetch_credentials" \
 	LUCENE_SEARCH="$lucene" \
 	TITLE_PREFIX="$title_prefix" \
+	LDV_URL="$ldv" \
 	perl -p -e 's|@([A-Z_]{3,})@|$ENV{$1}//$&|ge' "$t/$i.bundle.js" > "$d/$path.bundle.js"
 
     env -i \
@@ -93,6 +95,7 @@ Redirect to   : $endpoint
 	FETCH_CREDENTIALS="$fetch_credentials" \
 	LUCENE_SEARCH="$lucene" \
 	TITLE_PREFIX="$title_prefix" \
+	LDV_URL="$ldv" \
 	perl -p -e 's|@([A-Z_]{3,})@|$ENV{$1}//$&|ge;s|'"$i"'|'"$path"'|g' "$t/$i.bundle.js.map" > "$d/$path.bundle.js.map"
 
     env -i \
@@ -101,6 +104,7 @@ Redirect to   : $endpoint
 	FETCH_CREDENTIALS="$fetch_credentials" \
 	LUCENE_SEARCH="$lucene" \
 	TITLE_PREFIX="$title_prefix" \
+	LDV_URL="$ldv" \
 	perl -p -e 's|"explorer\.bundle\.js\??[^"]*"|"'"$path.bundle.js"'?'"$(openssl dgst -binary "$d/$path.bundle.js" | basenc --base64url --wrap=0)"'"|;s|@([A-Z_]{3,})@|$ENV{$1}//$&|ge;' \
 	"$t/index.html" > "$d/$path.html"
 
@@ -119,17 +123,18 @@ Entry $g:"
 ENDPOINT_URL  = $endpoint
 USE_CREDS     = $creds
 LUCENE_SEARCH = $lucene
+LDV_URL       = $ldv
 "
 }
 
 has_instance=0
 if [ "${ENDPOINT_MAP+x}" = x ]; then
     g=0
-    while IFS='|' read path endpoint lucene creds x; do
+    while IFS='|' read path endpoint lucene creds ldv x; do
 	let g=g+1
 	valid=0
-	if [ -n "$path$endpoint$lucene$creds$x" ]; then
-	    make_instance "$path" "$endpoint" "${lucene:-yes}" "${creds:-yes}" "$g" "$x" || valid=$?
+	if [ -n "$path$endpoint$lucene$creds$ldv$x" ]; then
+	    make_instance "$path" "$endpoint" "${lucene:-yes}" "${creds:-yes}" "$ldv" "$g" "$x" || valid=$?
 	    if [ "$valid" -eq 0 ]; then
 		has_instance=1
 	    fi
@@ -138,7 +143,7 @@ if [ "${ENDPOINT_MAP+x}" = x ]; then
 fi
 
 if [ "${ENDPOINT_URL+x}" = x ]; then
-    make_instance "index" "$ENDPOINT_URL" "${LUCENE_SEARCH-yes}" "${USE_CREDS-yes}" "0" ""
+    make_instance "index" "$ENDPOINT_URL" "${LUCENE_SEARCH-yes}" "${USE_CREDS-yes}" "${LDV_URL-}" "0" ""
     has_instance=1
 fi
 
